@@ -119,8 +119,6 @@ class RecipesSerializer(serializers.ModelSerializer):
             )
         return recipes
 
-
-
     def create(self, validated_data):
         if 'ingredients' not in self.initial_data:
             recipe = Recipes.objects.create(**validated_data)
