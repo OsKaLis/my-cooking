@@ -64,7 +64,21 @@ class Recipes(models.Model):
     """Рицепт приготовляния блюда."""
 
     RECIPES_TEMPLATE = '{}: {}'
-    name_recipe = models.CharField(
+
+    tags = models.ManyToManyField(Tags, through='TagsRecipes')
+
+    author = models.ForeignKey(
+        Users,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='id_author',
+    )
+
+    ingredients = models.ManyToManyField(Ingredients,
+                                         through='RecipeIngredients')
+
+    name = models.CharField(
         'Название рицепта',
         max_length=200,
     )
@@ -82,26 +96,10 @@ class Recipes(models.Model):
 
     cooking_time = models.IntegerField()
 
-    id_author = models.ForeignKey(
-        Users,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='id_author',
-    )
-
-    tags = models.ManyToManyField(Tags, through='TagsRecipes')
-
-    ingredients = models.ManyToManyField(Ingredients,
-                                         through='RecipeIngredients')
-
     pub_date = models.DateTimeField(
         verbose_name='Дата',
         auto_now_add=True,
     )
-
-    # is_favorited =
-    # is_in_shopping =
 
     class Meta:
         verbose_name = 'Рицепт'
@@ -109,7 +107,7 @@ class Recipes(models.Model):
 
     def __str__(self):
         return self.RECIPES_TEMPLATE.format(
-            self.name_recipe,
+            self.name,
             self.author,
         )
 
@@ -146,18 +144,14 @@ class RecipeIngredients(models.Model):
     RECIPEINGREDIENTS_TEMPLATE = '{}: {} {}'
     id_ingredient = models.ForeignKey(
         Ingredients,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='id_ri_ingredient',
+        on_delete=models.CASCADE,
+        default=0
     )
 
     id_recipe = models.ForeignKey(
         Recipes,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name='id_ri_recept',
+        on_delete=models.CASCADE,
+        default=0
     )
 
     amount = models.IntegerField()

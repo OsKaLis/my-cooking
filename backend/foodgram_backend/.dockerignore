@@ -3,3 +3,6 @@ venv
 .git
 db.sqlite3
 .env
+.env.docker
+admin_i_users.xlsx
+

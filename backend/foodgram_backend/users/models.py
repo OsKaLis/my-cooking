@@ -34,9 +34,7 @@ class Users(AbstractUser):
         ),
         max_length=USERNAME_MAX_LENGTH,
         unique=True,
-        validators=(
-
-        )
+        validators=()
     )
 
     first_name = models.CharField(

@@ -150,3 +150,6 @@ media/
 
 # Others
 node_modules
+
+.env.docker
+admin_i_users.xlsx
