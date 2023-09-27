@@ -1,5 +1,5 @@
 # .github/workflows/main.yml
-name: Main kittygram_final workflow
+name: Main foodgram-project-react workflow
 
 on:
   push:
