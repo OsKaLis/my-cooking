@@ -1,28 +1,17 @@
 from rest_framework import permissions
 
 
-class CreateUsers(permissions.BasePermission):
-    message = 'Для выполнения данной операции необходимы права администратора!'
+class VerificationAuthorAcceptance(permissions.BasePermission):
+    message = 'К сожалению вы не автор рицепта.'
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return (request.user and request.user.is_staff)
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
-
-class ChangePasswordUsers(permissions.BasePermission):
-    message = 'Для выполнения данной операции необходимы быдь авторизованым!'
-
-    def has_permission(self, request, view):
-        if request.method == 'PATCH':
-            return True
-        return (request.user.is_authenticated and request.user.is_staff)
-
-
-class DeletingTokenUsers(permissions.BasePermission):
-    message = 'Для выполнения данной операции необходимы быдь авторизованым!'
-
-    def has_permission(self, request, view):
-        if request.method == 'DELETE':
-            return True
-        return (request.user.is_authenticated and request.user.is_staff)
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or obj.author == request.user
+        )
