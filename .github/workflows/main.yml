@@ -1,5 +1,5 @@
 # .github/workflows/main.yml
-name: Main foodgram-project-react workflow
+name: Main foodgram-project "my-cooking.ru" workflow
 
 on:
   push:
@@ -14,11 +14,11 @@ jobs:
       postgres:
         image: postgres:13.10
         env:
-          POSTGRES_USER: django_user
-          POSTGRES_PASSWORD: 31un%893c%Hjzg%W4fh
-          POSTGRES_DB: django
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         ports:
-          - 5432:5432
+          - ${{ secrets.DB_PORT }}:${{ secrets.DB_PORT }}
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
@@ -35,11 +35,11 @@ jobs:
         pip install -r ./backend/requirements.txt
     - name: Test with flake8 and django tests
       env:
-        POSTGRES_USER: django_user
-        POSTGRES_PASSWORD: 31un%893c%Hjzg%W4fh
-        POSTGRES_DB: django
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
       
       run: |
         python -m flake8 backend/
