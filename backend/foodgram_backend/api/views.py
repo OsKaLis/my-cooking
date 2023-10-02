@@ -1,18 +1,15 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters, status
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
+from rest_framework import viewsets, filters, status, mixins
 from rest_framework.permissions import (
-    AllowAny,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
+    # AllowAny,
 )
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from recipes.models import (
     Ingredients,
     Tags,
-    Users,
     Recipes,
 )
 from api.serializers import (
@@ -20,43 +17,149 @@ from api.serializers import (
     TagsSerializer,
     UsersSerializer,
     UsersCreateSerializer,
-    UsersPatchSerializer,
+    SetPasswordSerializer,
+    SubscriptionsSerializer,
     RecipesSerializer,
     RecipesListRetrieveSerializer,
+    InSubscriptionsSerializer,
+
+
+)
+from .permissions import (
+    AuthenticatedOrReadOnly,
+    IsAdminUserOrReadOnly,
+)
+from users.models import (
+    Users,
+    Subscriptions,
 )
 
 
-class UserLoginView(ObtainAuthToken):
-    """Получения токена."""
+class UsersViewSet(viewsets.ModelViewSet):
+    """Создание пользователя или просмотр."""
+    queryset = Users.objects.all()
+    serializer_class = UsersSerializer
+    permission_classes = (AuthenticatedOrReadOnly, )
+
+    def get_serializer_class(self):
+        if self.action in ['create', ]:
+            return UsersCreateSerializer
+        return UsersSerializer
+
+
+class ProfileUserView(APIView):
+    """Показывает текущего пользователя."""
+    def get(self, request):
+        serializer = UsersSerializer(
+            get_object_or_404(Users, pk=request.user.id)
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SetPasswordView(APIView):
+    """Изменение пароля текущего пользователя."""
+    permission_classes = (IsAuthenticated, )
+
+    def get_object(self, queryset=None):
+        return self.request.user
 
     def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = SetPasswordSerializer(data=request.data)
 
-        email = request.data['email']
-        user = Users.objects.get(email=email)
-        request.data['username'] = user.username
-        del request.data['email']
+        if serializer.is_valid():
+            current_password = serializer.data.get("current_password")
+            new_password = serializer.data.get("new_password")
+            if current_password == new_password:
+                return Response(
+                    {"detail": ["Старый пароль такойже как и прежний."]},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+            if not self.object.check_password(current_password):
+                return Response(
+                    {"detail": ["Старый пароль неверный."]},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+            self.object.set_password(serializer.data.get("new_password"))
+            self.object.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubscriptionsViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    """Мои подписки."""
+    serializer_class = SubscriptionsSerializer
+
+    def get_queryset(self):
+        return self.request.user.subscriber.all()
+
+
+class SubscriberWriterView(APIView):
+    """Добавление в подписки или удаление."""
+
+    def post(self, request, *args, **kwargs):
+        user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
+
+        if self.request.user == user:
+            return Response(
+                    {"detail": ["Нельзя подписываться на самого себя."]},
+                    status=status.HTTP_400_BAD_REQUEST
+            )
+        if Subscriptions.objects.filter(
+            id_subscriber=self.request.user,
+            id_writer=user
+        ):
+            return Response(
+                    {"detail": ["Выуже подписаны на этого автора."]},
+                    status=status.HTTP_400_BAD_REQUEST
+            )
+        Subscriptions.objects.create(
+            id_subscriber=self.request.user,
+            id_writer=user
+        )
+        serializer = InSubscriptionsSerializer(
+            user,
+            data=request.data,
+            context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class IngredientsViewSet(viewsets.ModelViewSet):
-    queryset = Ingredients.objects.all()
-    serializer_class = IngredientsSerializer
-    pagination_class = None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name', ]
+    def delete(self, request, pk, format=None):
+        user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
+        subscription = Subscriptions.objects.filter(
+            id_subscriber=self.request.user,
+            id_writer=user
+        )
+        if not subscription:
+            return Response(
+                    {"detail": ["Вы уже отписались или не подписывались."]},
+                    status=status.HTTP_400_BAD_REQUEST
+            )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagsViewSet(viewsets.ModelViewSet):
+    """Работа с тегами."""
     queryset = Tags.objects.all()
     serializer_class = TagsSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAdminUserOrReadOnly, )
     pagination_class = None
+
+
+class IngredientsViewSet(viewsets.ModelViewSet):
+    """Работа с ингридиентами."""
+    queryset = Ingredients.objects.all()
+    serializer_class = IngredientsSerializer
+    permission_classes = (IsAdminUserOrReadOnly, )
+    pagination_class = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', ]
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
@@ -69,50 +172,3 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.action in ['retrieve', 'list']:
             return RecipesListRetrieveSerializer
         return RecipesSerializer
-
-
-class UsersViewSet(viewsets.ModelViewSet):
-    queryset = Users.objects.all()
-    serializer_class = UsersSerializer
-    # permission_classes = (CreateUsers,)
-    permission_classes = (AllowAny,)
-
-    def get_serializer_class(self):
-        if self.action in ['create', ]:
-            return UsersCreateSerializer
-        return UsersSerializer
-
-
-class CurrentUserView(APIView):
-    """Показывает текущего пользователя."""
-    # permission_classes = (permissions.IsAuthenticated,)
-
-    def get(self, request):
-        serializer = UsersSerializer(
-            get_object_or_404(Users, username=request.user.username)
-        )
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ChangePasswordView(APIView):
-    """Смена пароля."""
-    # permission_classes = (ChangePasswordUsers,)
-    permission_classes = (IsAuthenticated, )
-
-    def get_object(self, queryset=None):
-        return self.request.user
-
-    def patch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        serializer = UsersPatchSerializer(data=request.data)
-
-        if serializer.is_valid():
-            old_password = serializer.data.get("current_password")
-            if not self.object.check_password(old_password):
-                return Response({"current_password": ["Wrong password."]},
-                                status=status.HTTP_400_BAD_REQUEST)
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

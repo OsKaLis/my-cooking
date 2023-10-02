@@ -20,7 +20,7 @@ class Users(AbstractUser):
     first_name = models.CharField(
         'Имя пользователя',
         max_length=150,
-        blank=True
+        blank=True,
     )
 
     last_name = models.CharField(
@@ -63,7 +63,7 @@ class Subscriptions(models.Model):
     id_subscriber = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        related_name='id_subscriber',
+        related_name='subscriber',
         verbose_name='Кто подписался'
     )
 
@@ -71,13 +71,19 @@ class Subscriptions(models.Model):
     id_writer = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        related_name='id_writer',
+        related_name='writer',
         verbose_name='На кого подписан'
     )
 
     class Meta:
         verbose_name = 'Подписка на автора'
         verbose_name_plural = 'Подписки на авторов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['id_subscriber', 'id_writer'],
+                name='unique_id_subscriber_id_writer'
+            )
+        ]
 
     def __str__(self):
         return self.SUBSCRIPTIONS_TEMPLATE.format(

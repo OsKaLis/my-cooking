@@ -17,6 +17,11 @@ router.register(
     basename='Tags'
 )
 router.register(
+    r'users/subscriptions',
+    views.SubscriptionsViewSet,
+    basename='Users'
+)
+router.register(
     r'users',
     views.UsersViewSet,
     basename='Users'
@@ -27,11 +32,12 @@ router.register(
     basename='Recipes'
 )
 
+
 urlpatterns = [
-    path('users/me/', views.CurrentUserView.as_view()),
-    path('users/set_password/', views.ChangePasswordView.as_view()),
-    path('auth/token/login/', views.UserLoginView.as_view()),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
+    path('users/me/', views.ProfileUserView.as_view()),
+    path('users/set_password/', views.SetPasswordView.as_view()),
+    path('users/<int:pk>/subscribe/', views.SubscriberWriterView.as_view()),
     path('', include(router.urls)),
+    path('', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken')),
 ]
