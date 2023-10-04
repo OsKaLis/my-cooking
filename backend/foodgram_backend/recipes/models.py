@@ -103,7 +103,8 @@ class Recipes(models.Model):
         'Картинка рицепта.',
         upload_to='recipes/images/',
         null=True,
-        blank=True
+        blank=True,
+        default=None
     )
 
     text = models.TextField(

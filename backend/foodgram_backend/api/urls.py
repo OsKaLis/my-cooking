@@ -37,6 +37,7 @@ urlpatterns = [
     path('users/me/', views.ProfileUserView.as_view()),
     path('users/set_password/', views.SetPasswordView.as_view()),
     path('users/<int:pk>/subscribe/', views.SubscriberWriterView.as_view()),
+    path('recipes/<int:pk>/favorite/', views.FavoritedView.as_view()),
     path('', include(router.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),

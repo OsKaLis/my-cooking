@@ -11,6 +11,7 @@ from recipes.models import (
     Ingredients,
     Tags,
     Recipes,
+    Favorited,
 )
 from api.serializers import (
     IngredientsSerializer,
@@ -172,3 +173,38 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.action in ['retrieve', 'list']:
             return RecipesListRetrieveSerializer
         return RecipesSerializer
+
+
+class FavoritedView(APIView):
+    """Добавляем или удаляем из избранного."""
+
+    def post(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
+
+        if Favorited.objects.filter(
+            id_user=self.request.user,
+            id_recipe=recipe
+        ):
+            return Response(
+                    {"detail": ["На этот рицепт вы уже подписаны."]},
+                    status=status.HTTP_400_BAD_REQUEST
+            )
+        Favorited.objects.create(
+            id_user=self.request.user,
+            id_recipe=recipe
+        )
+        return Response(status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk, format=None):
+        recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
+        favorited = Favorited.objects.filter(
+            id_user=self.request.user,
+            id_recipe=recipe
+        )
+        if not favorited:
+            return Response(
+                    {"detail": ["Рицепт нет в избраном."]},
+                    status=status.HTTP_400_BAD_REQUEST
+            )
+        favorited.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
