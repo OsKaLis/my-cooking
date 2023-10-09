@@ -39,7 +39,8 @@ class RecipesPanel(admin.ModelAdmin):
     list_display = (
         'pk',
         'name',
-        'author'
+        'author',
+        'count_favorites',
     )
     list_editable = (
         'name',
@@ -47,6 +48,9 @@ class RecipesPanel(admin.ModelAdmin):
     )
     list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
+
+    def count_favorites(self, obj):
+        return obj.favorited_recipe.count()
 
 
 class TagsRecipesPanel(admin.ModelAdmin):

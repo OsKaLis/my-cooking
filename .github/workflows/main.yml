@@ -4,7 +4,7 @@ name: Main foodgram-project "my-cooking.ru" workflow
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   tests:
