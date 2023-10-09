@@ -80,12 +80,12 @@ class SetPasswordView(APIView):
                 return Response(
                     {"detail": ["Старый пароль такойже как и прежний."]},
                     status=status.HTTP_400_BAD_REQUEST
-                    )
+                )
             if not self.object.check_password(current_password):
                 return Response(
                     {"detail": ["Старый пароль неверный."]},
                     status=status.HTTP_400_BAD_REQUEST
-                    )
+                )
             self.object.set_password(serializer.data.get("new_password"))
             self.object.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -110,16 +110,16 @@ class SubscriberWriterView(APIView):
         user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
         if self.request.user == user:
             return Response(
-                    {"detail": ["Нельзя подписываться на самого себя."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["Нельзя подписываться на самого себя."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         if Subscriptions.objects.filter(
             id_subscriber=self.request.user,
             id_writer=user
         ):
             return Response(
-                    {"detail": ["Выуже подписаны на этого автора."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["Выуже подписаны на этого автора."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         Subscriptions.objects.create(
             id_subscriber=self.request.user,
@@ -141,8 +141,8 @@ class SubscriberWriterView(APIView):
         )
         if not subscription:
             return Response(
-                    {"detail": ["Вы уже отписались или не подписывались."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["Вы уже отписались или не подписывались."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -190,8 +190,8 @@ class FavoritedView(APIView):
             id_recipe=recipe
         ):
             return Response(
-                    {"detail": ["На этот рицепт вы уже подписаны."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["На этот рицепт вы уже подписаны."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         Favorited.objects.create(
             id_user=self.request.user,
@@ -207,8 +207,8 @@ class FavoritedView(APIView):
         )
         if not favorited:
             return Response(
-                    {"detail": ["Рицепт нет в избраном."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["Рицепт нет в избраном."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         favorited.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -247,8 +247,8 @@ class AddCartView(APIView):
             id_recipe=recipe
         ):
             return Response(
-                    {"detail": ["Выуже добавии этот рицепт."]},
-                    status=status.HTTP_400_BAD_REQUEST
+                {"detail": ["Выуже добавии этот рицепт."]},
+                status=status.HTTP_400_BAD_REQUEST
             )
         ShoppingList.objects.create(
             id_user=self.request.user,

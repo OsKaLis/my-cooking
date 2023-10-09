@@ -77,11 +77,11 @@ class UsersCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = Users(
-                email=validated_data['email'],
-                username=validated_data['username'],
-                first_name=validated_data['first_name'],
-                last_name=validated_data['last_name'],
-            )
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+        )
         user.set_password(validated_data['password'])
         user.save()
         return user
@@ -185,8 +185,8 @@ class RecipesSerializer(serializers.ModelSerializer):
         ingredients_data = validated_data.pop('ingredients')
 
         RecipeIngredients.objects.filter(
-                id_recipe=instance,
-                id_ingredient__in=instance.ingredients.all()
+            id_recipe=instance,
+            id_ingredient__in=instance.ingredients.all()
         ).delete()
 
         instance.tags.set(tags_data)
@@ -196,10 +196,10 @@ class RecipesSerializer(serializers.ModelSerializer):
             id_ingredient_data = ingredient_data['id']
             ingredient = get_object_or_404(Ingredients, pk=id_ingredient_data)
             RecipeIngredients.objects.create(
-                    id_recipe=instance,
-                    id_ingredient=ingredient,
-                    amount=amount_data
-                )
+                id_recipe=instance,
+                id_ingredient=ingredient,
+                amount=amount_data
+            )
 
         instance.save()
         return instance
