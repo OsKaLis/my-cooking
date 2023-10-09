@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, RegexValidator
 
+from .utils import get_file_path
 from users.models import Users
 
 
@@ -84,7 +85,7 @@ class Recipes(models.Model):
         Users,
         on_delete=models.CASCADE,
         default=0,
-        related_name='id_author_recipes',
+        related_name='author_recipe',
         verbose_name='Автор рицепта.'
     )
 
@@ -101,9 +102,8 @@ class Recipes(models.Model):
 
     image = models.ImageField(
         'Картинка рицепта.',
-        upload_to='recipes/images/',
+        upload_to=get_file_path,
         null=True,
-        blank=True,
         default=None
     )
 
@@ -170,7 +170,7 @@ class TagsRecipes(models.Model):
 class RecipeIngredients(models.Model):
     """Связь между рицептом и ингридиентами."""
 
-    RECIPEINGREDIENTS_TEMPLATE = '{}: {} {}'
+    RECIPEINGREDIENTS_TEMPLATE = '{}: {} ,kol {}'
     id_ingredient = models.ForeignKey(
         Ingredients,
         on_delete=models.CASCADE,
@@ -185,8 +185,9 @@ class RecipeIngredients(models.Model):
         verbose_name='Индификатор рицепта.'
     )
 
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество.',
+        default=1,
         validators=[MinValueValidator(1)]
     )
 
@@ -209,7 +210,7 @@ class Favorited(models.Model):
         Users,
         on_delete=models.CASCADE,
         default=0,
-        related_name='favorited_user_id',
+        related_name='favorited_user',
         verbose_name='Добавил в избранное.'
     )
 
@@ -217,7 +218,7 @@ class Favorited(models.Model):
         Recipes,
         on_delete=models.CASCADE,
         default=0,
-        related_name='favorited_recipe_id',
+        related_name='favorited_recipe',
         verbose_name='Избраный рицепт.'
     )
 
@@ -239,7 +240,7 @@ class ShoppingList(models.Model):
         Users,
         on_delete=models.CASCADE,
         default=0,
-        related_name='shoppinglist_user_id',
+        related_name='shoppinglist_user',
         verbose_name='Добавил в корзину.'
     )
 
@@ -247,7 +248,7 @@ class ShoppingList(models.Model):
         Recipes,
         on_delete=models.CASCADE,
         default=0,
-        related_name='shoppinglist_recipe_id',
+        related_name='shoppinglist_recipe',
         verbose_name='Рицепт в корзине.'
     )
 

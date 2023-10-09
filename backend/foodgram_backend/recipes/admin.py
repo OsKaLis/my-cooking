@@ -39,7 +39,11 @@ class RecipesPanel(admin.ModelAdmin):
     list_display = (
         'pk',
         'name',
-        'author',
+        'author'
+    )
+    list_editable = (
+        'name',
+        'author'
     )
     list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
