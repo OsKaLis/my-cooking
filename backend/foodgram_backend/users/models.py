@@ -5,13 +5,6 @@ from django.db import models
 class Users(AbstractUser):
     """Таблица Пользователей."""
 
-    """
-    class UserRole(models.TextChoices):
-        ADMIN = 'admin'
-        USER = 'user'
-        GUEST = 'guest'
-    """
-
     USER_TEMPLATE = '{}: {} {}'
     username = models.CharField(
         'Логин',
@@ -36,15 +29,6 @@ class Users(AbstractUser):
         max_length=254,
         unique=True,
     )
-
-    """
-    role = models.CharField(
-        'Роль пользователя',
-        max_length=max(len(choice) for choice, _ in UserRole.choices),
-        choices=UserRole.choices,
-        default=UserRole.USER,
-    )
-    """
 
     class Meta:
         ordering = ('last_name', 'first_name', 'username')
