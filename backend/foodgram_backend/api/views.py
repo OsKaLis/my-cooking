@@ -1,44 +1,25 @@
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
 from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters, status, mixins
-from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from recipes.models import (Favorited, Ingredients, RecipeIngredients, Recipes,
+                            ShoppingList, Tags)
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from users.models import Subscriptions, Users
 
-from recipes.models import (
-    Ingredients,
-    Tags,
-    Recipes,
-    RecipeIngredients,
-    Favorited,
-    ShoppingList,
-)
-from api.serializers import (
-    IngredientsSerializer,
-    TagsSerializer,
-    UsersSerializer,
-    UsersCreateSerializer,
-    SetPasswordSerializer,
-    SubscriptionsSerializer,
-    RecipesSerializer,
-    RecipesListRetrieveSerializer,
-    RecipesReductionSerializer,
-    InSubscriptionsSerializer,
-)
-from .permissions import (
-    ProfileReadOnly,
-    IsAdminUserOrReadOnly,
-)
-from users.models import (
-    Users,
-    Subscriptions,
-)
-from .filters import RecipesFilter, DynamicSearchFilter
+from api.serializers import (IngredientsSerializer, InSubscriptionsSerializer,
+                             RecipesListRetrieveSerializer,
+                             RecipesReductionSerializer, RecipesSerializer,
+                             SetPasswordSerializer, SubscriptionsSerializer,
+                             TagsSerializer, UsersCreateSerializer,
+                             UsersSerializer)
+
+from .filters import DynamicSearchFilter, RecipesFilter
+from .permissions import IsAdminUserOrReadOnly, ProfileReadOnly
 
 
 class UsersViewSet(viewsets.ModelViewSet):

@@ -1,24 +1,14 @@
 import base64
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from recipes.models import (Favorited, Ingredients, RecipeIngredients, Recipes,
+                            ShoppingList, Tags)
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
-
-from recipes.models import (
-    Ingredients,
-    RecipeIngredients,
-    Tags,
-    Recipes,
-    Favorited,
-    ShoppingList,
-)
-from users.models import (
-    Users,
-    Subscriptions,
-)
+from users.models import Subscriptions, Users
 
 
 class Base64ImageField(serializers.ImageField):

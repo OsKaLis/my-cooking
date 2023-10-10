@@ -1,13 +1,8 @@
-from django_filters.rest_framework import (
-    FilterSet,
-    CharFilter,
-    BooleanFilter,
-    ModelMultipleChoiceFilter
-)
+from django_filters.rest_framework import (BooleanFilter, CharFilter,
+                                           FilterSet,
+                                           ModelMultipleChoiceFilter)
+from recipes.models import Recipes, Tags
 from rest_framework import filters
-from recipes.models import Recipes
-
-from recipes.models import Tags
 
 
 class DynamicSearchFilter(filters.SearchFilter):
