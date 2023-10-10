@@ -5,10 +5,12 @@ from django.db import models
 class Users(AbstractUser):
     """Таблица Пользователей."""
 
+    """
     class UserRole(models.TextChoices):
         ADMIN = 'admin'
         USER = 'user'
         GUEST = 'guest'
+    """
 
     USER_TEMPLATE = '{}: {} {}'
     username = models.CharField(
@@ -35,12 +37,14 @@ class Users(AbstractUser):
         unique=True,
     )
 
+    """
     role = models.CharField(
         'Роль пользователя',
         max_length=max(len(choice) for choice, _ in UserRole.choices),
         choices=UserRole.choices,
         default=UserRole.USER,
     )
+    """
 
     class Meta:
         ordering = ('last_name', 'first_name', 'username')
@@ -76,6 +80,7 @@ class Subscriptions(models.Model):
     )
 
     class Meta:
+        ordering = ['-id_writer']
         verbose_name = 'Подписка на автора'
         verbose_name_plural = 'Подписки на авторов'
         constraints = [
