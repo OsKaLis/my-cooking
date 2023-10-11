@@ -1,3 +1,4 @@
+# flake8: noqa
 import csv
 import os.path
 

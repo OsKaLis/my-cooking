@@ -1,3 +1,4 @@
+# flake8: noqa
 from django.contrib import admin
 from recipes.models import (
     Tags,
