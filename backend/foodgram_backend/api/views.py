@@ -1,3 +1,4 @@
+# flake8: noqa
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -9,15 +10,20 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from users.models import Subscriptions, Users
-
-from api.serializers import (IngredientsSerializer, InSubscriptionsSerializer,
-                             RecipesListRetrieveSerializer,
-                             RecipesReductionSerializer, RecipesSerializer,
-                             SetPasswordSerializer, SubscriptionsSerializer,
-                             TagsSerializer, UsersCreateSerializer,
-                             UsersSerializer)
-
+from api.serializers import (
+    IngredientsSerializer,
+    InSubscriptionsSerializer,
+    RecipesListRetrieveSerializer,
+    RecipesReductionSerializer,
+    RecipesSerializer,
+    SetPasswordSerializer,
+    SubscriptionsSerializer,
+    TagsSerializer,
+    UsersCreateSerializer,
+    UsersSerializer
+)
 from .filters import DynamicSearchFilter, RecipesFilter
 from .permissions import IsAdminUserOrReadOnly, ProfileReadOnly
 

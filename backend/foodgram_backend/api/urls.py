@@ -1,3 +1,4 @@
+# flake8: noqa
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

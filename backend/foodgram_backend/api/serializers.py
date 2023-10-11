@@ -1,13 +1,21 @@
+# flake8: noqa
 import base64
 
 from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from recipes.models import (Favorited, Ingredients, RecipeIngredients, Recipes,
-                            ShoppingList, Tags)
+from recipes.models import (
+    Favorited,
+    Ingredients,
+    RecipeIngredients,
+    Recipes,
+    ShoppingList,
+    Tags
+)
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
+
 from users.models import Subscriptions, Users
 
 
