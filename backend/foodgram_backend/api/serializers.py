@@ -124,15 +124,22 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
     """Для записи ингридиентов."""
 
     id = serializers.IntegerField()
-    """
+    
     amount = serializers.IntegerField(
         min_value=MIN_NUMBER,
         max_value=MAX_NUMBER,
     )
-    """
+    
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'amount')
+
+    def to_representation(self, instance):
+        instance['amount'] = 33333
+        data = super().to_representation(instance)
+        # data['id'] = 47
+        # data['amount'] = 22222222
+        return data
     
 
 class RecipesSerializer(serializers.ModelSerializer):
@@ -168,13 +175,6 @@ class RecipesSerializer(serializers.ModelSerializer):
             'author',
         )
 
-    
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        
-        data['amount'] = 2
-        return data
-    
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
