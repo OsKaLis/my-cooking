@@ -124,7 +124,6 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
     """Для записи ингридиентов."""
 
     id = serializers.IntegerField()
-
     """
     amount = serializers.IntegerField(
         min_value=MIN_NUMBER,
