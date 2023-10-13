@@ -29,6 +29,7 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
         )
 
 
+"""
 class VerificationAuthorAcceptance(permissions.BasePermission):
     message = 'К сожалению вы не автор рицепта.'
 
@@ -43,3 +44,4 @@ class VerificationAuthorAcceptance(permissions.BasePermission):
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user
         )
+"""

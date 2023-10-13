@@ -1,32 +1,35 @@
+# flake8: noqa
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+from .configurations import (
+    STANDARD_FIELD_VALUE,
+    EMAIL_FIELD_VALUE,
+)
 
 
 class Users(AbstractUser):
     """Таблица Пользователей."""
 
-    USER_TEMPLATE = '{}: {} {}'
+    USER_TEMPLATE = '{}: {}. {}.'
     username = models.CharField(
         'Логин',
-        max_length=150,
+        max_length=STANDARD_FIELD_VALUE,
         unique=True,
     )
-
     first_name = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=STANDARD_FIELD_VALUE,
         blank=True,
     )
-
     last_name = models.CharField(
         'Фамилия пользователя',
-        max_length=150,
+        max_length=STANDARD_FIELD_VALUE,
         blank=True
     )
-
     email = models.EmailField(
         'Адрес электронной почты',
-        max_length=254,
+        max_length=EMAIL_FIELD_VALUE,
         unique=True,
     )
 
@@ -44,22 +47,21 @@ class Users(AbstractUser):
 
 
 class Subscriptions(models.Model):
-    """Кто на кого подписан."""
-    SUBSCRIPTIONS_TEMPLATE = '{} > {}'
+    """Таблица отношений Подписок пользователей."""
 
+    SUBSCRIPTIONS_TEMPLATE = '{} > {}'
     # Кто подписался.
     id_subscriber = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        related_name='subscriber',
+        related_name='subscriptions_subscriber',
         verbose_name='Кто подписался'
     )
-
     # На кого подписан.
     id_writer = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        related_name='writer',
+        related_name='subscriptions_writer',
         verbose_name='На кого подписан'
     )
 

@@ -1,5 +1,6 @@
 # flake8: noqa
 from django.contrib import admin
+
 from recipes.models import (
     Tags,
     Ingredients,
@@ -36,6 +37,11 @@ class IngredientsPanel(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredients
+    min_num = 1
+
+
 class RecipesPanel(admin.ModelAdmin):
     list_display = (
         'pk',
@@ -47,6 +53,7 @@ class RecipesPanel(admin.ModelAdmin):
         'name',
         'author'
     )
+    inlines = (RecipeIngredientInline, )
     list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
 

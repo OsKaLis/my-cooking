@@ -3,18 +3,23 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Favorited, Ingredients, RecipeIngredients, Recipes,
-                            ShoppingList, Tags)
+from recipes.models import (
+    Favorited,
+    Ingredients,
+    RecipeIngredients,
+    Recipes,
+    ShoppingList,
+    Tags
+)
 from rest_framework import filters, mixins, status, viewsets
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from users.models import Subscriptions, Users
 from api.serializers import (
     IngredientsSerializer,
-    InSubscriptionsSerializer,
+    AddSubscriptionsSerializer,
     RecipesListRetrieveSerializer,
     RecipesReductionSerializer,
     RecipesSerializer,
@@ -51,7 +56,6 @@ class ProfileUserView(APIView):
 
 class SetPasswordView(APIView):
     """Изменение пароля текущего пользователя."""
-    permission_classes = (IsAuthenticated, )
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -59,76 +63,54 @@ class SetPasswordView(APIView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         serializer = SetPasswordSerializer(data=request.data)
-
-        if serializer.is_valid():
-            current_password = serializer.data.get("current_password")
-            new_password = serializer.data.get("new_password")
-            if current_password == new_password:
-                return Response(
-                    {"detail": ["Старый пароль такойже как и прежний."]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if not self.object.check_password(current_password):
-                return Response(
-                    {"detail": ["Старый пароль неверный."]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            self.object.set_password(serializer.data.get("new_password"))
+        if serializer.is_valid(raise_exception=True):
+            self.object.set_password(serializer.data.get('new_password'))
             self.object.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SubscriptionsViewSet(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
-):
+class SubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """Показывает подписки текущего пользователя."""
     serializer_class = SubscriptionsSerializer
 
     def get_queryset(self):
-        return self.request.user.subscriber.all()
+        return self.request.user.subscriptions_subscriber.all()
 
 
 class SubscriberWriterView(APIView):
     """Добавление в подписки или удаление."""
 
     def post(self, request, *args, **kwargs):
-        user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
-        if self.request.user == user:
-            return Response(
-                {"detail": ["Нельзя подписываться на самого себя."]},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if Subscriptions.objects.filter(
-            id_subscriber=self.request.user,
-            id_writer=user
-        ):
-            return Response(
-                {"detail": ["Выуже подписаны на этого автора."]},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        Subscriptions.objects.create(
-            id_subscriber=self.request.user,
-            id_writer=user
+        user = self.request.user
+        add_user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
+        serializer = AddSubscriptionsSerializer(
+            data={'subscriber': user.id, 'writer': add_user.id}
         )
-        serializer = InSubscriptionsSerializer(
-            user,
-            data=request.data,
-            context={'request': request}
+        if serializer.is_valid(raise_exception=True):
+            serializer = SubscriptionsSerializer(
+                Subscriptions.objects.create(
+                    id_subscriber=user,
+                    id_writer=add_user
+                ),
+                data=request.data,
+                context={'request': request}
+            )
+            if serializer.is_valid(raise_exception=True):
+                return Response(serializer.data, status=status.HTTP_200_OK)            
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
         )
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk, format=None):
         user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
-        subscription = Subscriptions.objects.filter(
-            id_subscriber=self.request.user,
-            id_writer=user
+        subscription = user.subscriptions_writer.filter(
+            id_subscriber=self.request.user
         )
         if not subscription:
             return Response(
-                {"detail": ["Вы уже отписались или не подписывались."]},
+                {'detail': ['Вы уже отписались или не подписывались.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         subscription.delete()
@@ -171,13 +153,11 @@ class FavoritedView(APIView):
     """Добавляем или удаляем из избранного."""
 
     def post(self, request, *args, **kwargs):
+        user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
-        if Favorited.objects.filter(
-            id_user=self.request.user,
-            id_recipe=recipe
-        ):
+        if recipe.favorited_recipe.filter(id_user=user):
             return Response(
-                {"detail": ["На этот рицепт вы уже подписаны."]},
+                {'detail': ['На этот рицепт вы уже подписаны.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         Favorited.objects.create(
@@ -187,14 +167,12 @@ class FavoritedView(APIView):
         return Response(status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, format=None):
+        user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
-        favorited = Favorited.objects.filter(
-            id_user=self.request.user,
-            id_recipe=recipe
-        )
+        favorited = recipe.favorited_recipe.filter(id_user=user)
         if not favorited:
             return Response(
-                {"detail": ["Рицепт нет в избраном."]},
+                {'detail': ['Рицепт нет в избраном.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         favorited.delete()
@@ -228,13 +206,11 @@ class AddCartView(APIView):
     """Добавить или удалить из корзины."""
 
     def post(self, request, *args, **kwargs):
+        user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
-        if ShoppingList.objects.filter(
-            id_user=self.request.user,
-            id_recipe=recipe
-        ):
+        if recipe.shoppinglist_recipe.filter(id_user=user):
             return Response(
-                {"detail": ["Выуже добавии этот рицепт."]},
+                {'detail': ['Выуже добавии этот рицепт.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         ShoppingList.objects.create(
@@ -250,15 +226,13 @@ class AddCartView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, pk, format=None):
+        user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
-        shoppingList = ShoppingList.objects.filter(
-            id_user=self.request.user,
-            id_recipe=recipe
-        )
+        shoppingList = recipe.shoppinglist_recipe.filter(id_user=user)
         if not shoppingList:
-            text = "Вы уже удалиле рицепт из корзины или не добавляли."
+            text = 'Вы уже удалиле рицепт из корзины или не добавляли.'
             return Response(
-                {"detail": [text]},
+                {'detail': [text]},
                 status=status.HTTP_400_BAD_REQUEST
             )
         shoppingList.delete()

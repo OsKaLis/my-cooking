@@ -1,23 +1,33 @@
 # flake8: noqa
 from django.db import models
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator,
+    RegexValidator
+)
 
 from .utils import get_file_path
+from .configurations import (
+    MAX_NUMBER,
+    MIN_NUMBER,
+    DIMENSION_FIELD,
+    FIELD_COLOR_DEFAULT,
+    DEFAULT_INTERAGER_FIELD,
+)
 from users.models import Users
 
 
 class Tags(models.Model):
-    """Модель TAGS, сортировка по тегу."""
+    """Таблица TAGS, сортировка по тегу."""
 
     TAGS_TEMPLATE = '{}: {} {}'
     name = models.CharField(
         'Название сортировки',
-        max_length=200,
+        max_length=DIMENSION_FIELD,
     )
-
     color = models.CharField(
         'Цвет в RGB',
-        max_length=7,
+        max_length=FIELD_COLOR_DEFAULT,
         null=True,
         validators=[
             RegexValidator(
@@ -26,15 +36,15 @@ class Tags(models.Model):
             )
         ]
     )
-
     slug = models.SlugField(
         'Текс цвета выделения',
         unique=True,
-        max_length=200,
+        max_length=DIMENSION_FIELD,
         null=True
     )
 
     class Meta:
+        ordering = ['-slug']
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -47,20 +57,20 @@ class Tags(models.Model):
 
 
 class Ingredients(models.Model):
-    """Модель ингриндиентов."""
+    """Таблица Ингриндиентов."""
 
     INGREDIENTS_TEMPLATE = '{} measurement in {}'
     name = models.CharField(
         'Название ингридиента',
-        max_length=200,
+        max_length=DIMENSION_FIELD,
     )
-
     measurement_unit = models.CharField(
         'Измерения ингридиента',
-        max_length=200,
+        max_length=DIMENSION_FIELD,
     )
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'Ингридиент'
         verbose_name_plural = 'Ингридиенты'
 
@@ -75,50 +85,44 @@ class Recipes(models.Model):
     """Рицепт приготовляния блюда."""
 
     RECIPES_TEMPLATE = '{}: {}'
-
     tags = models.ManyToManyField(
         Tags,
         through='TagsRecipes',
         verbose_name='Теги'
     )
-
     author = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        default=0,
+        default=DEFAULT_INTERAGER_FIELD,
         related_name='author_recipe',
         verbose_name='Автор рицепта.'
     )
-
     ingredients = models.ManyToManyField(
         Ingredients,
         through='RecipeIngredients',
-        verbose_name='Ингридиенты.'
+        verbose_name='Ингридиенты.',
     )
-
     name = models.CharField(
         'Название рицепта.',
-        max_length=200,
+        max_length=DIMENSION_FIELD,
     )
-
     image = models.ImageField(
         'Картинка рицепта.',
         upload_to=get_file_path,
         null=True,
         default=None
     )
-
     text = models.TextField(
         'Описание',
         default='',
     )
-
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время готовки в минутах.',
-        validators=[MinValueValidator(1)]
-
+        validators=[
+            MinValueValidator(MIN_NUMBER),
+            MaxValueValidator(MAX_NUMBER)
+        ]
     )
-
     pub_date = models.DateTimeField(
         'Дата публикации.',
         auto_now_add=True,
@@ -158,6 +162,7 @@ class TagsRecipes(models.Model):
     )
 
     class Meta:
+        ordering = ['id_teg']
         verbose_name = 'Рицепт < Тег.'
         verbose_name_plural = 'Рицепты < Теги.'
 
@@ -178,21 +183,23 @@ class RecipeIngredients(models.Model):
         related_name='i_connection_r',
         verbose_name='Индификатор ингридиента.'
     )
-
     id_recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
         related_name='r_connection_i',
         verbose_name='Индификатор рицепта.'
     )
-
     amount = models.PositiveSmallIntegerField(
         'Количество.',
-        default=1,
-        validators=[MinValueValidator(1)]
+        default=MIN_NUMBER,
+        validators=[
+            MinValueValidator(MIN_NUMBER),
+            MaxValueValidator(MAX_NUMBER)
+        ]
     )
 
     class Meta:
+        ordering = ['id_ingredient']
         verbose_name = 'Рицепт < Ингридиент.'
         verbose_name_plural = 'Рицепты < Ингридиенты.'
 
@@ -205,27 +212,28 @@ class RecipeIngredients(models.Model):
 
 
 class Favorited(models.Model):
+    """Таблица Избраных рицептов."""
 
     FAVORITED_TEMPLATE = '{}: {}'
     id_user = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        default=0,
+        default=DEFAULT_INTERAGER_FIELD,
         related_name='favorited_user',
         verbose_name='Добавил в избранное.'
     )
-
     id_recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
-        default=0,
+        default=DEFAULT_INTERAGER_FIELD,
         related_name='favorited_recipe',
         verbose_name='Избраный рицепт.'
     )
 
     class Meta:
-        verbose_name = "Избраный"
-        verbose_name_plural = "Избраные"
+        ordering = ['id_user']
+        verbose_name = 'Избраный'
+        verbose_name_plural = 'Избраные'
 
     def __str__(self):
         return self.FAVORITED_TEMPLATE.format(
@@ -235,27 +243,28 @@ class Favorited(models.Model):
 
 
 class ShoppingList(models.Model):
+    """Таблица Подписок на автора рицептов."""
 
     SHOPPINGLIST_TEMPLATE = '{}: {}'
     id_user = models.ForeignKey(
         Users,
         on_delete=models.CASCADE,
-        default=0,
+        default=DEFAULT_INTERAGER_FIELD,
         related_name='shoppinglist_user',
         verbose_name='Добавил в корзину.'
     )
-
     id_recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
-        default=0,
+        default=DEFAULT_INTERAGER_FIELD,
         related_name='shoppinglist_recipe',
         verbose_name='Рицепт в корзине.'
     )
 
     class Meta:
-        verbose_name = "Корзина"
-        verbose_name_plural = "Корзина"
+        ordering = ['id_user']
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзина'
 
     def __str__(self):
         return self.SHOPPINGLIST_TEMPLATE.format(
