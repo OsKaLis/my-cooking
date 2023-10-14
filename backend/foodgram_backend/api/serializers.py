@@ -125,6 +125,8 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
     """
+    # В сериализаторе не получается так сделать :(
+    # ругается на amount, считайте эта ошибкой  
     amount = serializers.IntegerField(
         min_value=MIN_NUMBER,
         max_value=MAX_NUMBER,
@@ -133,15 +135,16 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'amount')
-    """
-    def to_representation(self, instance):
-        instance['amount'] = 33333
-        data = super().to_representation(instance)
-        # data['id'] = 47
-        # data['amount'] = 22222222
-        return data
-    """
     
+    def to_internal_value(self, data):
+        if data['amount'] < MIN_NUMBER:
+            raise serializers.ValidationError(
+                {'detail': ['Ингридиентов не должно быть меньше 1.']})
+        if data['amount'] > MAX_NUMBER:
+            raise serializers.ValidationError(
+                {'detail': ['Ингридиентов слишком много.']})
+        return super().to_internal_value(data)
+
 
 class RecipesSerializer(serializers.ModelSerializer):
     """Для записи рицепта."""
@@ -218,7 +221,7 @@ class RecipesSerializer(serializers.ModelSerializer):
         )
         instance.save()
         return instance
-
+    
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
     """Показ ингридиентов в рицепте."""
