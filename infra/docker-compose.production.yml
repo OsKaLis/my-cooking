@@ -30,7 +30,7 @@ services:
       - ../frontend/:/app/result_build/
 
   gateway:
-    image: nginx:1.22.1-alpine
+    image: oskalis/foodgram_gateway
     restart: always
     ports:
       - 9009:80
