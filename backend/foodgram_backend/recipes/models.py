@@ -101,6 +101,7 @@ class Recipes(models.Model):
         Ingredients,
         through='RecipeIngredients',
         verbose_name='Ингридиенты.',
+        related_name='recipe_ing',
     )
     name = models.CharField(
         'Название рицепта.',

@@ -124,26 +124,10 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
     """Для записи ингридиентов."""
 
     id = serializers.IntegerField()
-    """
-    # В сериализаторе не получается так сделать :(
-    # ругается на amount, считайте эта ошибкой  
-    amount = serializers.IntegerField(
-        min_value=MIN_NUMBER,
-        max_value=MAX_NUMBER,
-    )
-    """
+
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'amount')
-    
-    def to_internal_value(self, data):
-        if data['amount'] < MIN_NUMBER:
-            raise serializers.ValidationError(
-                {'detail': ['Ингридиентов не должно быть меньше 1.']})
-        if data['amount'] > MAX_NUMBER:
-            raise serializers.ValidationError(
-                {'detail': ['Ингридиентов слишком много.']})
-        return super().to_internal_value(data)
 
 
 class RecipesSerializer(serializers.ModelSerializer):
@@ -178,6 +162,18 @@ class RecipesSerializer(serializers.ModelSerializer):
             'cooking_time',
             'author',
         )
+
+    def to_internal_value(self, data):
+        ingredients = data['ingredients']
+
+        for ingredient in ingredients:
+            if ingredient['amount'] < MIN_NUMBER:
+                raise serializers.ValidationError(
+                    {'detail': ['Ингридиентов не должно быть меньше 1.']})
+            if ingredient['amount'] > MAX_NUMBER:
+                raise serializers.ValidationError(
+                    {'detail': ['Ингридиентов слишком много.']})
+        return super().to_internal_value(data)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

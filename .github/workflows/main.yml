@@ -131,8 +131,21 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
-          cd my-cooking
-          cd infra
+          # Перехожу в папку infra
+          cd my-cooking/infra/
+                    
+          # Создаю .env
+          sudo rm -f .env
+          sudo touch .env
+          sudo chmod 666 .env
+          sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }}
+          sudo echo POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          sudo echo POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          sudo echo DB_HOST=${{ secrets.DB_HOST }}
+          sudo echo DB_PORT=${{ secrets.DB_PORT }}
+          sudo echo DEBUG=${{ secrets.DEBUG }}
+          
           # Выполняет pull образов с Docker Hub
           sudo docker compose -f docker-compose.production.yml pull
           # Перезапускает все контейнеры в Docker Compose
