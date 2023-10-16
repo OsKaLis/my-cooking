@@ -1,9 +1,6 @@
 # flake8: noqa
-import base64
-
 from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth.password_validation import validate_password
-from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -20,16 +17,6 @@ from recipes.configurations import (
     MAX_NUMBER,
     WITHDRAWAL_CALL_RECIPES
 )
-
-"""
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
-"""
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -133,9 +120,7 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
 class RecipesSerializer(serializers.ModelSerializer):
     """Для записи рицепта."""
     
-    ingredients = AddRecipeIngredientsSerializer(
-        many=True,
-    )
+    ingredients = AddRecipeIngredientsSerializer(many=True)
     tags = SlugRelatedField(
         slug_field='id',
         many=True,
@@ -145,8 +130,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault(),
     )
-    image = Base64ImageField(required=False, allow_null=True, use_url=True)
-    
+    image = Base64ImageField()
     cooking_time = serializers.IntegerField(
         min_value=MIN_NUMBER,
         max_value=MAX_NUMBER,
@@ -163,7 +147,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             'cooking_time',
             'author',
         )
-
+    
     def to_internal_value(self, data):
         ingredients = data['ingredients']
 
@@ -242,10 +226,7 @@ class RecipesListRetrieveSerializer(serializers.ModelSerializer):
     author = UsersSerializer()
     tags = TagsSerializer(many=True)
     ingredients = serializers.SerializerMethodField()
-    image = serializers.SerializerMethodField(
-        'get_image_url',
-        read_only=True
-    )
+    image = Base64ImageField()
 
     class Meta:
         model = Recipes
@@ -261,11 +242,6 @@ class RecipesListRetrieveSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
         )
-
-    def get_image_url(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
 
     def get_ingredients(self, obj):
         ingredients_recipe = obj.r_connection_i.filter()
@@ -293,7 +269,7 @@ class RecipesReductionSerializer(serializers.Serializer):
     """Показ сокращёный рицепт."""
     id = serializers.ReadOnlyField()
     name = serializers.ReadOnlyField()
-    image = Base64ImageField(read_only=True)
+    image = Base64ImageField()
     cooking_time = serializers.ReadOnlyField()
 
     class Meta:
