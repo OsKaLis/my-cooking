@@ -8,12 +8,14 @@ volumes:
 services:
   db:
     image: postgres:13.10
+    restart: always
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   backend:
     image: oskalis/foodgram_backend:latest
+    restart: always
     env_file: .env
     volumes:
       - static:/app/static/
@@ -23,12 +25,14 @@ services:
 
   frontend:
     image: oskalis/foodgram_frontend:latest
+    restart: always
     env_file: .env
     volumes:
       - ../frontend/:/app/result_build/
 
   gateway:
     image: oskalis/foodgram_gateway
+    restart: always
     ports:
       - 9009:80
     volumes:
@@ -38,5 +42,6 @@ services:
       - static:/var/html/static/
       - media:/var/html/media/
     depends_on:
+      - db
       - backend
       - frontend
