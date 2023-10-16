@@ -1,6 +1,7 @@
 # flake8: noqa
 import base64
 
+from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth.password_validation import validate_password
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
@@ -20,16 +21,15 @@ from recipes.configurations import (
     WITHDRAWAL_CALL_RECIPES
 )
 
-
+"""
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
-
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
         return super().to_internal_value(data)
+"""
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -145,7 +145,8 @@ class RecipesSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault(),
     )
-    image = Base64ImageField(required=False, allow_null=True)
+    image = Base64ImageField(required=False, allow_null=True, use_url=True)
+    
     cooking_time = serializers.IntegerField(
         min_value=MIN_NUMBER,
         max_value=MAX_NUMBER,
