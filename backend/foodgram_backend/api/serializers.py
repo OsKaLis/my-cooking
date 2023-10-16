@@ -241,6 +241,10 @@ class RecipesListRetrieveSerializer(serializers.ModelSerializer):
     author = UsersSerializer()
     tags = TagsSerializer(many=True)
     ingredients = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField(
+        'get_image_url',
+        read_only=True
+    )
 
     class Meta:
         model = Recipes
@@ -256,6 +260,11 @@ class RecipesListRetrieveSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
         )
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     def get_ingredients(self, obj):
         ingredients_recipe = obj.r_connection_i.filter()

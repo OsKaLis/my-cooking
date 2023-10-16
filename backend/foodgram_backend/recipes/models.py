@@ -6,7 +6,6 @@ from django.core.validators import (
     RegexValidator
 )
 
-from .utils import get_file_path
 from .configurations import (
     MAX_NUMBER,
     MIN_NUMBER,
@@ -109,7 +108,7 @@ class Recipes(models.Model):
     )
     image = models.ImageField(
         'Картинка рицепта.',
-        upload_to=get_file_path,
+        upload_to='recipes/images/',
         null=True,
         default=None
     )
