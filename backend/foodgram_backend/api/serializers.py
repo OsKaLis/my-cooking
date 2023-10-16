@@ -326,7 +326,7 @@ class SubscriptionsSerializer(serializers.ModelSerializer):
     
     def get_recipes_count(self, obj):
         return obj.id_writer.author_recipe.filter().count()
-        
+
 
 class AddSubscriptionsSerializer(serializers.Serializer):
     """Проверка на добавление в подписки."""
