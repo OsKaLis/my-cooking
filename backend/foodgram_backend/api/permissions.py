@@ -3,7 +3,6 @@ from rest_framework import permissions
 
 class ProfileReadOnly(permissions.IsAuthenticated):
     """Для просмотра профиль и создания пользователя."""
-
     def has_permission(self, request, view):
         return (
             view.action in ['create', 'retrieve']
