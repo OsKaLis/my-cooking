@@ -269,7 +269,7 @@ class RecipesReductionSerializer(serializers.Serializer):
     """Показ сокращёный рицепт."""
     id = serializers.ReadOnlyField()
     name = serializers.ReadOnlyField()
-    image = Base64ImageField()
+    image = Base64ImageField(read_only=True)
     cooking_time = serializers.ReadOnlyField()
 
     class Meta:
