@@ -17,7 +17,6 @@ class DynamicSearchFilter(filters.SearchFilter):
 
 class RecipesFilter(FilterSet):
     """Фильтр по автору, избраным рицептам, в корзине, тегам."""
-
     tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
