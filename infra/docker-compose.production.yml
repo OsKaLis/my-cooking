@@ -12,6 +12,10 @@ services:
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+            test: ["CMD", "pg_isready", "-q"]
+            timeout: 60s
+            retries: 10
 
   backend:
     image: oskalis/foodgram_backend:latest
@@ -21,12 +25,13 @@ services:
       - static:/app/static/
       - media:/app/media/
     depends_on:
-      - db
+      - db:
+            condition: service_healthy
 
   frontend:
     image: oskalis/foodgram_frontend:latest
     restart: always
-    env_file: .env
+    # env_file: .env
     volumes:
       - ../frontend/:/app/result_build/
 
