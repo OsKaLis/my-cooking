@@ -31,7 +31,7 @@ services:
   frontend:
     image: oskalis/foodgram_frontend:latest
     restart: always
-    # env_file: .env
+    env_file: .env
     volumes:
       - ../frontend/:/app/result_build/
 
