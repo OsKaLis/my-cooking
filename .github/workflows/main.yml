@@ -122,7 +122,7 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "./infra/docker-compose.production.yml"
-        target: "my-cooking"
+        target: "my-cooking/infra/"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
