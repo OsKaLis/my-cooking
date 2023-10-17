@@ -148,18 +148,6 @@ class RecipesSerializer(serializers.ModelSerializer):
             'author',
         )
     
-    def to_internal_value(self, data):
-        ingredients = data['ingredients']
-
-        for ingredient in ingredients:
-            if ingredient['amount'] < MIN_NUMBER:
-                raise serializers.ValidationError(
-                    {'detail': ['Ингридиентов не должно быть меньше 1.']})
-            if ingredient['amount'] > MAX_NUMBER:
-                raise serializers.ValidationError(
-                    {'detail': ['Ингридиентов слишком много.']})
-        return super().to_internal_value(data)
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 

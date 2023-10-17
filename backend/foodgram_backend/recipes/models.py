@@ -12,6 +12,8 @@ from .configurations import (
     DIMENSION_FIELD,
     FIELD_COLOR_DEFAULT,
     DEFAULT_INTERAGER_FIELD,
+    MESSAGE_MINEMUM,
+    MESSAGE_HIGHS,
 )
 from users.models import Users
 
@@ -100,7 +102,7 @@ class Recipes(models.Model):
         Ingredients,
         through='RecipeIngredients',
         verbose_name='Ингридиенты.',
-        related_name='recipe_ing',
+        # related_name='recipe_ing',
     )
     name = models.CharField(
         'Название рицепта.',
@@ -193,8 +195,8 @@ class RecipeIngredients(models.Model):
         'Количество.',
         default=MIN_NUMBER,
         validators=[
-            MinValueValidator(MIN_NUMBER),
-            MaxValueValidator(MAX_NUMBER)
+            MinValueValidator(MIN_NUMBER, MESSAGE_MINEMUM),
+            MaxValueValidator(MAX_NUMBER, MESSAGE_HIGHS)
         ]
     )
 
