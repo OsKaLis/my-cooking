@@ -41,6 +41,10 @@ class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredients
     min_num = 1
 
+class RecipesTags(admin.TabularInline):
+    model = TagsRecipes
+    min_num = 1
+
 
 class RecipesPanel(admin.ModelAdmin):
     list_display = (
@@ -53,7 +57,7 @@ class RecipesPanel(admin.ModelAdmin):
         'name',
         'author'
     )
-    inlines = (RecipeIngredientInline, )
+    inlines = (RecipeIngredientInline, RecipesTags)
     list_filter = ('name', 'author', 'tags')
     empty_value_display = '-пусто-'
 

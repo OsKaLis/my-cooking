@@ -161,10 +161,24 @@ class FavoritedView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         Favorited.objects.create(
-            id_user=self.request.user,
+            id_user=user,
             id_recipe=recipe
         )
-        return Response(status=status.HTTP_201_CREATED)
+        serializer = RecipesReductionSerializer(
+                recipe,
+                data=request.data,
+                context={'request': request}
+            )
+        if serializer.is_valid(raise_exception=True):
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                )            
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
 
     def delete(self, request, pk, format=None):
         user=self.request.user

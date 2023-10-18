@@ -1,6 +1,7 @@
 # flake8: noqa
 from drf_extra_fields.fields import Base64ImageField
 from django.contrib.auth.password_validation import validate_password
+from django.core import exceptions
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -57,6 +58,10 @@ class UsersCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
 
     def create(self, validated_data):
         user = Users(
