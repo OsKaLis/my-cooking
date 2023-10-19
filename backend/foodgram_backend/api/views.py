@@ -3,14 +3,6 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (
-    Favorited,
-    Ingredients,
-    RecipeIngredients,
-    Recipes,
-    ShoppingList,
-    Tags
-)
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -28,6 +20,14 @@ from api.serializers import (
     TagsSerializer,
     UsersCreateSerializer,
     UsersSerializer
+)
+from recipes.models import (
+    Favorited,
+    Ingredients,
+    RecipeIngredients,
+    Recipes,
+    ShoppingList,
+    Tags
 )
 from .filters import DynamicSearchFilter, RecipesFilter
 from .permissions import IsAdminUserOrReadOnly, ProfileReadOnly
@@ -56,7 +56,6 @@ class ProfileUserView(APIView):
 
 class SetPasswordView(APIView):
     """Изменение пароля текущего пользователя."""
-
     def get_object(self, queryset=None):
         return self.request.user
 
@@ -80,28 +79,23 @@ class SubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class SubscriberWriterView(APIView):
     """Добавление в подписки или удаление."""
-
     def post(self, request, *args, **kwargs):
         user = self.request.user
         add_user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
         serializer = AddSubscriptionsSerializer(
             data={'subscriber': user.id, 'writer': add_user.id}
         )
-        if serializer.is_valid(raise_exception=True):
-            serializer = SubscriptionsSerializer(
-                Subscriptions.objects.create(
-                    id_subscriber=user,
-                    id_writer=add_user
-                ),
-                data=request.data,
-                context={'request': request}
-            )
-            if serializer.is_valid(raise_exception=True):
-                return Response(serializer.data, status=status.HTTP_200_OK)            
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+        serializer.is_valid(raise_exception=True)
+        serializer = SubscriptionsSerializer(
+            Subscriptions.objects.create(
+                id_subscriber=user,
+                id_writer=add_user
+            ),
+            data=request.data,
+            context={'request': request}
         )
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.data, status=status.HTTP_200_OK)            
 
     def delete(self, request, pk, format=None):
         user = get_object_or_404(Users, pk=self.kwargs.get('pk'))
@@ -151,7 +145,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 class FavoritedView(APIView):
     """Добавляем или удаляем из избранного."""
-
     def post(self, request, *args, **kwargs):
         user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))
@@ -169,16 +162,8 @@ class FavoritedView(APIView):
                 data=request.data,
                 context={'request': request}
             )
-        if serializer.is_valid(raise_exception=True):
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                )            
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)            
 
     def delete(self, request, pk, format=None):
         user=self.request.user
@@ -195,7 +180,6 @@ class FavoritedView(APIView):
 
 class DownloadShoppingCartView(APIView):
     """Скачать список ингридиентов для покупок."""
-
     def get(self, request):
         user = self.request.user
         ingredients = RecipeIngredients.objects.filter(
@@ -206,8 +190,8 @@ class DownloadShoppingCartView(APIView):
         ).annotate(amount=Sum('amount')).order_by()
         filename = 'Список_к_покупки_ингридиентов.txt'
         shoppingList = 'Список ингридиентов:\n\n'
-        for ing in ingredients:
-            shoppingList += f'{ing[0]}: {ing[2]} {ing[1]}\n'
+        for name, unit, amount in ingredients:
+            shoppingList += f'{name}: {amount} {unit}\n'
         response = HttpResponse(
             shoppingList,
             content_type='text/plain'
@@ -218,7 +202,6 @@ class DownloadShoppingCartView(APIView):
 
 class AddCartView(APIView):
     """Добавить или удалить из корзины."""
-
     def post(self, request, *args, **kwargs):
         user=self.request.user
         recipe = get_object_or_404(Recipes, pk=self.kwargs.get('pk'))

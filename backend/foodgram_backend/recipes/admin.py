@@ -41,6 +41,7 @@ class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredients
     min_num = 1
 
+
 class RecipesTags(admin.TabularInline):
     model = TagsRecipes
     min_num = 1

@@ -16,7 +16,8 @@ from users.models import Subscriptions, Users
 from recipes.configurations import (
     MIN_NUMBER,
     MAX_NUMBER,
-    WITHDRAWAL_CALL_RECIPES
+    WITHDRAWAL_CALL_RECIPES,
+    AT_LEAST_ONE_INGREDIENT
 )
 
 
@@ -98,7 +99,6 @@ class SetPasswordSerializer(serializers.Serializer):
 
 class IngredientsSerializer(serializers.ModelSerializer):
     """Показ ингридиентов."""
-
     class Meta:
         model = Ingredients
         fields = ('id', 'name', 'measurement_unit')
@@ -106,7 +106,6 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 class TagsSerializer(serializers.ModelSerializer):
     """Показ тегов."""
-
     class Meta:
         model = Tags
         fields = ('id', 'name', 'color', 'slug')
@@ -114,7 +113,6 @@ class TagsSerializer(serializers.ModelSerializer):
 
 class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
     """Для записи ингридиентов."""
-
     id = serializers.IntegerField()
 
     class Meta:
@@ -124,7 +122,6 @@ class AddRecipeIngredientsSerializer(serializers.ModelSerializer):
 
 class RecipesSerializer(serializers.ModelSerializer):
     """Для записи рицепта."""
-    
     ingredients = AddRecipeIngredientsSerializer(many=True)
     tags = SlugRelatedField(
         slug_field='id',
@@ -152,7 +149,25 @@ class RecipesSerializer(serializers.ModelSerializer):
             'cooking_time',
             'author',
         )
-    
+
+    def validate_ingredients(self, value):
+        if len(value) < 1:
+            raise serializers.ValidationError(
+                {'detail': [AT_LEAST_ONE_INGREDIENT]})
+        return value
+
+    def RecordIngredients(self, recipes, ingredients_data):
+        RecipeIngredients.objects.bulk_create(
+            [RecipeIngredients(
+                id_recipe=recipes,
+                id_ingredient=get_object_or_404(
+                    Ingredients,
+                    pk=ingredient_data['id']
+                ),
+                amount=ingredient_data.get('amount'))
+                for ingredient_data in ingredients_data
+            ], batch_size=None)
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -161,14 +176,7 @@ class RecipesSerializer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
         recipes = Recipes.objects.create(**validated_data)
         recipes.tags.set(tags_data)
-        RecipeIngredients.objects.bulk_create(
-            [RecipeIngredients(
-                id_recipe=recipes,
-                id_ingredient=get_object_or_404(Ingredients, pk=ingredient_data['id']),
-                amount=ingredient_data.get('amount')) for ingredient_data in ingredients_data
-            ],
-            batch_size=None
-        )
+        self.RecordIngredients(recipes, ingredients_data)
         return recipes
 
     def update(self, instance, validated_data):
@@ -185,21 +193,13 @@ class RecipesSerializer(serializers.ModelSerializer):
             id_ingredient__in=instance.ingredients.all()
         ).delete()
         instance.tags.set(tags_data)
-        RecipeIngredients.objects.bulk_create(
-            [RecipeIngredients(
-                id_recipe=instance,
-                id_ingredient=get_object_or_404(Ingredients, pk=ingredient_data['id']),
-                amount=ingredient_data.get('amount')) for ingredient_data in ingredients_data
-            ],
-            batch_size=None
-        )
+        self.RecordIngredients(instance, ingredients_data)
         instance.save()
         return instance
     
 
 class RecipeIngredientsSerializer(serializers.ModelSerializer):
     """Показ ингридиентов в рицепте."""
-
     id = serializers.ReadOnlyField(source='id_ingredient.id')
     name = serializers.ReadOnlyField(source='id_ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -213,7 +213,6 @@ class RecipeIngredientsSerializer(serializers.ModelSerializer):
 
 class RecipesListRetrieveSerializer(serializers.ModelSerializer):
     """Для вывода рицепта."""
-
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     author = UsersSerializer()
